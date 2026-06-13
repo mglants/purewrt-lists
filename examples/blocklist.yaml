@@ -1,0 +1,44 @@
+# nftset-builder reference config.
+# Produces one <category>.native list per category (nftset= directives +
+# elements block) for purewrt native parsing. Each category takes any mix
+# of inputs:
+#   geosite: geosite.dat category names (resolved from geosite.url)
+#   domains: domain-list sources → resolved by dnsmasq at query time
+#   subnets: CIDR-list sources → static elements (each passes the ip_filter)
+# Categories are declared in priority order: a domain equal-to/under an
+# earlier category's domain is removed from later ones (so ai wins over
+# media, and common excludes anything under ai/media).
+
+table: inet blocklist
+ipv6: true
+
+# Shared geosite.dat for every category's geosite entries. Point url at any
+# v2ray/Xray geosite.dat (MetaCubeX, Re-filter, Loyalsoldier...).
+geosite:
+  url: https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geosite.dat
+
+ip_filter:
+  drop_host_routes: true     # drop /32 + /128 (pre-resolved single IPs)
+  min_prefix_v4: 0           # 0 = keep any non-host prefix
+  min_prefix_v6: 0
+  cdn_exclude:               # plain-CIDR sources carved out of the subnet sets
+    - https://github.com/PentiumB/CDN-RuleSet/releases/latest/download/merged.sum
+
+categories:
+  ai:
+    geosite: [CATEGORY-AI-!CN, CATEGORY-AI-CN]
+  media:
+    geosite: [youtube, netflix, spotify, disney, tiktok, twitch, hbo]
+  common:
+    # NB: Re-filter publishes domains_all.lst as a release asset, but
+    # community.lst only as a raw repo file (raw.githubusercontent.com).
+    domains:
+      - https://community.antifilter.download/list/domains.lst
+      - https://github.com/1andrevich/Re-filter-lists/releases/latest/download/domains_all.lst
+      - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/community.lst
+    # Fully-blocked networks — static elements.
+    subnets:
+      - https://antifilter.download/list/subnet.lst
+      - https://github.com/1andrevich/Re-filter-lists/releases/latest/download/ipsum.lst
+      - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/community_ips.lst
+      - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/discord_ips.lst

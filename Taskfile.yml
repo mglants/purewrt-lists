@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  default:
+    cmds: [task --list]
+
+  test:
+    desc: Run unit tests + vet
+    cmds:
+      - go test ./...
+      - go vet ./...
+
+  build:
+    desc: Build the nftset-builder binary
+    cmds:
+      - go build -trimpath -ldflags='-s -w' -o dist/nftset-builder .
+
+  lists:build:
+    desc: Compile the blocklist bundle from examples/blocklist.yaml into dist/
+    deps: [build]
+    cmds:
+      - ./dist/nftset-builder --config examples/blocklist.yaml --out dist
