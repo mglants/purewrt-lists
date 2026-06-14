@@ -16,11 +16,12 @@ const cidrMarker = "@cidr"
 
 // CatalogEntry is one row of catalog.json — the wizard's list picker.
 type CatalogEntry struct {
-	Name            string `json:"name"`
-	File            string `json:"file"`
+	Name             string `json:"name"`
+	File             string `json:"file"`
 	SuggestedSection string `json:"suggested_section"`
-	Domains         int    `json:"domains"`
-	Subnets         int    `json:"subnets"`
+	Priority         int    `json:"priority"` // routing precedence the wizard assigns the section/provider
+	Domains          int    `json:"domains"`
+	Subnets          int    `json:"subnets"`
 }
 
 // Emit writes the bundle to dir: one <category>.native per category, a
@@ -37,7 +38,8 @@ func (r *Result) Emit(dir string) error {
 		}
 		catalog = append(catalog, CatalogEntry{
 			Name: s, File: file, SuggestedSection: s,
-			Domains: len(r.Domains[s]), Subnets: len(r.Subnets[s]),
+			Priority: r.Priorities[s],
+			Domains:  len(r.Domains[s]), Subnets: len(r.Subnets[s]),
 		})
 	}
 	if err := writeJSON(filepath.Join(dir, "catalog.json"), catalog); err != nil {

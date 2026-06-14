@@ -26,10 +26,13 @@ ip_filter:
 
 categories:
   ai:
+    priority: 10
     geosite: [CATEGORY-AI-!CN, CATEGORY-AI-CN]
   media:
+    priority: 20
     geosite: [youtube, netflix, spotify, disney, tiktok, twitch, hbo]
   common:
+    priority: 100
     # NB: Re-filter publishes domains_all.lst as a release asset, but
     # community.lst only as a raw repo file (raw.githubusercontent.com).
     domains:

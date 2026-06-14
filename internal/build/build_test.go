@@ -168,6 +168,13 @@ func TestRunEndToEnd(t *testing.T) {
 			t.Fatalf("catalog.json missing %q:\n%s", want, cat)
 		}
 	}
+	// catalog.json carries the per-list routing priority (name-based defaults
+	// here: common=60, media=10, ai=20).
+	for _, want := range []string{`"priority": 60`, `"priority": 10`, `"priority": 20`} {
+		if !strings.Contains(string(cat), want) {
+			t.Fatalf("catalog.json missing %q:\n%s", want, cat)
+		}
+	}
 	if _, err := os.Stat(filepath.Join(outDir, "manifest.json")); err != nil {
 		t.Fatalf("manifest.json not emitted: %v", err)
 	}

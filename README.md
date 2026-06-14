@@ -20,9 +20,16 @@ categories:
   media:
     geosite: [youtube, netflix]
   common:
+    priority: 60                        # optional routing precedence (catalog.json)
     domains: [https://…/domains.lst]    # domain-list sources
     subnets: [https://…/subnet.lst]     # CIDR-list sources
 ```
+
+- **priority** (optional) is the routing precedence published per list in
+  `catalog.json`; the purewrt wizard uses it for the section/rule-provider it
+  creates (lower = higher precedence). Omit it and the builder falls back to
+  purewrt's conventional defaults by name (`direct` 1, `reject` 2, `media` 10,
+  `ai` 20, `common` 60, anything else 100).
 
 - **geosite / domains** become dnsmasq `nftset=` directives; dnsmasq resolves
   them into the category's sets at query time. Categories are declared in
@@ -45,7 +52,7 @@ categories:
 | file | purpose |
 |------|---------|
 | `<category>.native` | the category's data in the marker-split bare format (below) |
-| `catalog.json` | index of categories (`name`, `file`, `suggested_section`, counts) for the purewrt wizard's list picker |
+| `catalog.json` | index of categories (`name`, `file`, `suggested_section`, `priority`, counts) for the purewrt wizard's list picker |
 | `manifest.json` | counts + sources + every reduction (auditable) |
 
 ### `.native` format (marker-split, bare)
@@ -90,7 +97,7 @@ builder already did all of that). The wizard's "Default lists" source reads
 config rule_provider 'blocked_common'
     option enabled '1'
     option parse_mode 'native_import'
-    option url 'https://github.com/<you>/nftset-builder/releases/latest/download/common.native'
+    option url 'https://github.com/mglants/purewrt-lists/releases/latest/download/common.native'
     option section '<your section>'
     option interval '86400'
 ```

@@ -23,10 +23,36 @@ type Geosite struct {
 
 // Category is one named nft set; each input kind is optional.
 type Category struct {
-	Name    string   `yaml:"-"`
-	Subnets []string `yaml:"subnets"` // CIDR-list sources → static elements
-	Domains []string `yaml:"domains"` // domain-list sources → dnsmasq directives
-	Geosite []string `yaml:"geosite"` // geosite.dat category names
+	Name     string   `yaml:"-"`
+	Priority int      `yaml:"priority"` // routing precedence in catalog.json (0 ⇒ name-based default)
+	Subnets  []string `yaml:"subnets"`  // CIDR-list sources → static elements
+	Domains  []string `yaml:"domains"`  // domain-list sources → dnsmasq directives
+	Geosite  []string `yaml:"geosite"`  // geosite.dat category names
+}
+
+// EffectivePriority is the routing precedence published in catalog.json for
+// this category. An explicit `priority:` in build.yaml wins; otherwise it
+// falls back to PureWRT's conventional section priorities by name (lower =
+// higher precedence), matching what the router assigns by default and what
+// subscription import derives from classification. Unknown names get 100.
+func (c Category) EffectivePriority() int {
+	if c.Priority > 0 {
+		return c.Priority
+	}
+	switch c.Name {
+	case "direct":
+		return 1
+	case "reject":
+		return 2
+	case "media":
+		return 10
+	case "ai":
+		return 20
+	case "common":
+		return 60
+	default:
+		return 100
+	}
 }
 
 // Categories preserves YAML declaration order: earlier categories win domain

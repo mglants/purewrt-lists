@@ -14,10 +14,11 @@ type Result struct {
 	Family   string
 	Table    string
 	IPv6     bool
-	Sections []string                  // category names in declaration/emit order
-	Domains  map[string][]string       // category → sorted domains
-	Subnets  map[string][]netip.Prefix // category → sorted prefixes
-	Manifest Manifest
+	Sections   []string                  // category names in declaration/emit order
+	Priorities map[string]int            // category → catalog routing priority
+	Domains    map[string][]string       // category → sorted domains
+	Subnets    map[string][]netip.Prefix // category → sorted prefixes
+	Manifest   Manifest
 }
 
 type Manifest struct {
@@ -41,7 +42,8 @@ func Run(cfg Config, stamp int64) (*Result, error) {
 	}
 	res := &Result{
 		Family: family, Table: table, IPv6: cfg.IPv6,
-		Domains: map[string][]string{}, Subnets: map[string][]netip.Prefix{},
+		Priorities: map[string]int{},
+		Domains:    map[string][]string{}, Subnets: map[string][]netip.Prefix{},
 		Manifest: Manifest{
 			BuildStamp: stamp, Table: cfg.Table,
 			Sources:      map[string][]string{},
@@ -50,6 +52,7 @@ func Run(cfg Config, stamp int64) (*Result, error) {
 	}
 	for _, cat := range cfg.Categories {
 		res.Sections = append(res.Sections, cat.Name)
+		res.Priorities[cat.Name] = cat.EffectivePriority()
 	}
 	warn := func(format string, a ...any) {
 		res.Manifest.Warnings = append(res.Manifest.Warnings, fmt.Sprintf(format, a...))
