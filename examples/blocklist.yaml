@@ -18,11 +18,11 @@ geosite:
   url: https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/geosite.dat
 
 ip_filter:
-  drop_host_routes: true     # drop /32 + /128 (pre-resolved single IPs)
+  drop_host_routes: false     # drop /32 + /128 (pre-resolved single IPs)
   min_prefix_v4: 0           # 0 = keep any non-host prefix
   min_prefix_v6: 0
-  cdn_exclude:               # plain-CIDR sources carved out of the subnet sets
-    - https://github.com/PentiumB/CDN-RuleSet/releases/latest/download/merged.sum
+  cdn_exclude: []               # plain-CIDR sources carved out of the subnet sets
+  #  - https://github.com/PentiumB/CDN-RuleSet/releases/latest/download/merged.sum
 
 categories:
   ai:
