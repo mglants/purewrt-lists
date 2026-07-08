@@ -32,3 +32,5 @@ jobs:
             dist/manifest.json
             dist/catalog.json
             dist/*.native
+            dist/zapret_candidates.json
+            dist/blobs/*

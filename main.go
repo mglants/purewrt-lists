@@ -36,6 +36,13 @@ func main() {
 	if err := res.Emit(*out); err != nil {
 		fatal(err)
 	}
+	stratWarns, err := build.EmitStrategies(cfg.Strategies, *out)
+	if err != nil {
+		fatal(err)
+	}
+	if n := len(cfg.Strategies.Candidates); n > 0 {
+		fmt.Printf("emitted %d zapret strategy candidate(s) → %s/%s\n", n, *out, "zapret_candidates.json")
+	}
 	m := res.Manifest
 	parts := make([]string, 0, len(res.Sections))
 	for _, s := range res.Sections {
@@ -48,7 +55,7 @@ func main() {
 	fmt.Printf("built %s: %s (host-routes dropped=%d, CDN carved=%d, subdomains collapsed=%d, children collapsed=%d) → %s\n",
 		cfg.Table, strings.Join(parts, " "), m.SubnetFilter.HostRoutesDropped, m.SubnetFilter.CDNCarved,
 		m.SubdomainsDropped, m.SubnetFilter.ChildrenCollapsed, *out)
-	for _, w := range m.Warnings {
+	for _, w := range append(append([]string{}, m.Warnings...), stratWarns...) {
 		fmt.Fprintln(os.Stderr, "warning:", w)
 	}
 }

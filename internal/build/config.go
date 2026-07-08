@@ -10,11 +10,46 @@ import (
 
 // Config is the build.yaml schema.
 type Config struct {
-	Table      string     `yaml:"table"` // nft family + table, e.g. "inet blocklist"
-	IPv6       bool       `yaml:"ipv6"`  // emit v6 sets/elements
-	Geosite    Geosite    `yaml:"geosite"`
-	IPF        IPFilter   `yaml:"ip_filter"`
-	Categories Categories `yaml:"categories"`
+	Table      string         `yaml:"table"` // nft family + table, e.g. "inet blocklist"
+	IPv6       bool           `yaml:"ipv6"`  // emit v6 sets/elements
+	Geosite    Geosite        `yaml:"geosite"`
+	IPF        IPFilter       `yaml:"ip_filter"`
+	Categories Categories     `yaml:"categories"`
+	Strategies StrategyConfig `yaml:"strategies"` // zapret2 candidate list + decoy blobs (optional)
+}
+
+// StrategyConfig declares the zapret2 strategy candidates published as
+// zapret_candidates.json (+ any non-standard decoy blobs bundled under blobs/).
+type StrategyConfig struct {
+	BlobsBase  string     `yaml:"blobs_base"` // default source URL prefix for blob files
+	Candidates []Strategy `yaml:"candidates"`
+}
+
+// Strategy is one zapret_candidates.json entry — mirrors purewrt's
+// config.ZapretCandidate (json tags must match).
+type Strategy struct {
+	Name      string   `yaml:"name" json:"name"`
+	Group     string   `yaml:"group" json:"group"`
+	Service   string   `yaml:"service" json:"service,omitempty"` // "" | "generic" | "youtube" | "discord" | "games"
+	Protocols []string `yaml:"protocols" json:"protocols"`
+	TCPPorts  string   `yaml:"tcp_ports" json:"tcp_ports"`
+	UDPPorts  string   `yaml:"udp_ports" json:"udp_ports"`
+	TCPPktOut int      `yaml:"tcp_pkt_out" json:"tcp_pkt_out"`
+	TCPPktIn  int      `yaml:"tcp_pkt_in" json:"tcp_pkt_in"`
+	UDPPktOut int      `yaml:"udp_pkt_out" json:"udp_pkt_out"`
+	UDPPktIn  int      `yaml:"udp_pkt_in" json:"udp_pkt_in"`
+	Params    string   `yaml:"params" json:"params"`
+	Blobs     []Blob   `yaml:"blobs" json:"blobs,omitempty"`
+}
+
+// Blob names an nfqws2 decoy a strategy references. URL (optional) is the
+// fetch source for bundling a non-standard .bin; SHA256 is computed by the
+// builder and published (the router verifies fetched blobs against it).
+type Blob struct {
+	Name   string `yaml:"name" json:"name"`
+	File   string `yaml:"file" json:"file"`
+	URL    string `yaml:"url" json:"-"`
+	SHA256 string `yaml:"-" json:"sha256,omitempty"`
 }
 
 type Geosite struct {

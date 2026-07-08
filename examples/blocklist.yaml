@@ -45,3 +45,242 @@ categories:
       - https://github.com/1andrevich/Re-filter-lists/releases/latest/download/ipsum.lst
       - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/community_ips.lst
       - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/discord_ips.lst
+
+# zapret2 strategy candidates published as zapret_candidates.json (the purewrt
+# Zapret tester + preset dropdown fetch this). Blobs with a `url` (or resolved
+# via blobs_base) are bundled under blobs/ + sha256'd; blobs without a source
+# are resolved on the router from its zapret package.
+strategies:
+  # blobs_base: https://github.com/mglants/purewrt-lists/releases/latest/download/blobs/
+  candidates:
+    - name: default
+      group: recommended
+      service: generic          # generic/untagged = wildcard, tried in every service-scoped sweep
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000 --lua-desync=multidisorder:pos=1,midsld"
+    - name: multisplit
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5:tcp_seq=-10000 --lua-desync=multisplit:pos=1,midsld"
+    - name: fake_repeats6
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5:repeats=6 --lua-desync=multidisorder:pos=1,midsld"
+    - name: fake_only
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5"
+    - name: youtube
+      group: recommended
+      service: youtube
+      protocols: [tcp, udp]
+      tcp_ports: "80,443"
+      udp_ports: "443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=2,sniext+1:seqovl=679:seqovl_pattern=tls_google --new --filter-udp=443 --filter-l7=quic --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6"
+      blobs:
+        - {name: tls_google, file: tls_clienthello_www_google_com.bin}
+        - {name: quic_google, file: quic_initial_www_google_com.bin}
+    - name: discord
+      group: recommended
+      service: discord
+      protocols: [tcp, udp]
+      tcp_ports: "80,443"
+      udp_ports: "443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=1,sniext+1:seqovl=336:seqovl_pattern=tls_google --new --filter-udp=443 --filter-l7=stun,discord --lua-desync=fake:blob=stun_fake:repeats=6"
+      blobs:
+        - {name: tls_google, file: tls_clienthello_www_google_com.bin}
+        - {name: stun_fake, file: stun.bin}
+    - name: youtube_discord
+      group: recommended
+      protocols: [tcp, udp]
+      tcp_ports: "80,443"
+      udp_ports: "443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=2,sniext+1:seqovl=679:seqovl_pattern=tls_google --new --filter-udp=443 --filter-l7=quic --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6 --new --filter-udp=443 --filter-l7=stun,discord --lua-desync=fake:blob=stun_fake:repeats=6"
+      blobs:
+        - {name: tls_google, file: tls_clienthello_www_google_com.bin}
+        - {name: quic_google, file: quic_initial_www_google_com.bin}
+        - {name: stun_fake, file: stun.bin}
+    - name: fake_rnd_sni
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=-10000:tls_mod=rnd,dupsid:repeats=11 --lua-desync=multidisorder:pos=1,midsld"
+    - name: fake_multisplit_seqovl
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=-10000:repeats=8 --lua-desync=multisplit:pos=1:seqovl=679:seqovl_pattern=fake_default_tls"
+    - name: hostfakesplit_google
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=hostfakesplit:host=www.google.com:tcp_ts=-1000:tcp_md5:repeats=4"
+    - name: syndata
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=syndata --lua-desync=multidisorder:pos=1,midsld"
+    - name: telegram_mtproto
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "443"
+      tcp_pkt_out: 2
+      params: "--filter-tcp=443 --filter-l7=mtproto --payload=mtproto_initial --lua-desync=fake:blob=0x00000000:repeats=2:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit:pos=16"
+    - name: youtube_quic
+      group: recommended
+      protocols: [udp]
+      udp_ports: "443"
+      udp_pkt_out: 9
+      params: "--filter-udp=443 --filter-l7=quic --payload=quic_initial --lua-desync=fake:blob=quic_google:repeats=6:ip_autottl=-2,3-20:ip6_autottl=-2,3-20"
+      blobs:
+        - {name: quic_google, file: quic_initial_www_google_com.bin}
+    - name: discord_voice_udp
+      group: recommended
+      protocols: [udp]
+      udp_ports: "443,50000-65535"
+      udp_pkt_out: 9
+      udp_pkt_in: 3
+      params: "--filter-udp=443,50000-65535 --filter-l7=stun,discord,quic --lua-desync=fake:blob=stun_fake:repeats=6:ip_autottl=-2,3-20:ip6_autottl=-2,3-20"
+      blobs:
+        - {name: stun_fake, file: stun.bin}
+    - name: udp_games
+      group: recommended
+      protocols: [udp]
+      udp_ports: "1024-65535"
+      udp_pkt_out: 6
+      udp_pkt_in: 2
+      params: "--filter-udp=1024-65535 --payload=quic_initial --lua-desync=fake:blob=fake_default_quic:repeats=3:ip_autottl=-2,3-20:ip6_autottl=-2,3-20"
+    - name: rkn_https
+      group: recommended
+      protocols: [tcp]
+      tcp_ports: "443,2053,2083,2087,2096,8443"
+      params: "--filter-tcp=443,2053,2083,2087,2096,8443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit:pos=1,midsld"
+    - name: auto_split_2
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=2"
+    - name: auto_split_1_midsld
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=1,midsld"
+    - name: auto_split_sniext
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=sniext+1"
+    - name: auto_split_midsld
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=midsld"
+    - name: auto_split_multipos
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=1,sniext+1,host+1,midsld-2,midsld,midsld+2,endhost-1"
+    - name: auto_disorder_1
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=1"
+    - name: auto_disorder_sniext
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=sniext+1"
+    - name: auto_disorder_midsld
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=midsld"
+    - name: auto_seqovl_split_10
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=10:seqovl=1"
+    - name: auto_seqovl_split_10_sniext
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:pos=10,sniext+1:seqovl=1"
+    - name: auto_seqovl_disorder_2
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=2:seqovl=1"
+    - name: auto_seqovl_disorder_midsld
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multidisorder:pos=midsld:seqovl=1"
+    - name: auto_tcpseg_drop
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=tcpseg:pos=0,-1:seqovl=1 --lua-desync=drop"
+    - name: auto_fake_badsum
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:badsum"
+    - name: auto_fake_badseq
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=-3000"
+    - name: auto_fake_badack_ts
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_ack=-66000:tcp_ts_up"
+    - name: auto_fake_badts
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_ts=-1000"
+    - name: auto_fake_syn_flag
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_flags_set=SYN"
+    - name: auto_fake_zero_md5
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=0x00000000:tcp_md5"
+    - name: auto_fake_md5_split2
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_md5 --lua-desync=multisplit:pos=2"
+    - name: auto_fake_badsum_disorder
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:badsum --lua-desync=multidisorder:pos=midsld"
+    - name: auto_fake_badseq_disorder
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=fake:blob=fake_default_tls:tcp_seq=-3000 --lua-desync=multidisorder:pos=1,midsld"
+    - name: auto_fake_in_split_nodrop
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=multisplit:blob=fake_default_tls:tcp_md5:pos=2:nodrop"
+    - name: auto_wssize_split
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=wssize:wsize=1:scale=6 --lua-desync=multisplit:pos=1,midsld"
+    - name: auto_syndata_marker
+      group: auto
+      protocols: [tcp]
+      tcp_ports: "80,443"
+      params: "--filter-tcp=80 --filter-l7=http --payload=http_req --lua-desync=fake:blob=fake_default_http:tcp_md5 --lua-desync=multisplit:pos=method+2 --new --filter-tcp=443 --filter-l7=tls --payload=tls_client_hello --lua-desync=syndata:blob=0x1603"
