@@ -138,6 +138,7 @@ strategies:
       params: "--filter-tcp=443 --filter-l7=mtproto --payload=mtproto_initial --lua-desync=fake:blob=0x00000000:repeats=2:tcp_md5:ip_autottl=-2,3-20:ip6_autottl=-2,3-20 --lua-desync=multisplit:pos=16"
     - name: youtube_quic
       isp: common
+      service: youtube
       protocols: [udp]
       udp_ports: "443"
       udp_pkt_out: 9
@@ -146,6 +147,7 @@ strategies:
         - {name: quic_google, file: quic_initial_www_google_com.bin}
     - name: discord_voice_udp
       isp: common
+      service: discord
       protocols: [udp]
       udp_ports: "443,50000-65535"
       udp_pkt_out: 9
@@ -155,6 +157,7 @@ strategies:
         - {name: stun_fake, file: stun.bin}
     - name: udp_games
       isp: common
+      service: games
       protocols: [udp]
       udp_ports: "1024-65535"
       udp_pkt_out: 6
