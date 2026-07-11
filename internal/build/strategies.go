@@ -54,21 +54,30 @@ func EmitStrategies(sc StrategyConfig, dir string) ([]string, error) {
 			if b.Name == "" || b.File == "" {
 				return nil, fmt.Errorf("candidate %q blob missing name/file", sc.Candidates[i].Name)
 			}
-			src := blobSource(sc.BlobsBase, *b)
-			if src == "" {
-				continue // no source → router resolves from its zapret package
-			}
 			if sum, done := sums[b.File]; done {
 				b.SHA256 = sum
 				continue
 			}
+			// Resolve blob bytes: an in-repo file (BlobsDir) wins over a remote
+			// source; a blob with neither is left as {name,file} for the router
+			// to resolve from its shipped zapret package.
+			data, err := localBlob(sc.BlobsDir, b.File)
+			if err != nil {
+				return nil, fmt.Errorf("candidate %q blob %s: %w", sc.Candidates[i].Name, b.File, err)
+			}
+			if data == nil {
+				src := blobSource(sc.BlobsBase, *b)
+				if src == "" {
+					continue
+				}
+				data, err = fetchBlob(src)
+				if err != nil {
+					warns = append(warns, fmt.Sprintf("blob %s: %v (skipped bundling)", b.File, err))
+					continue
+				}
+			}
 			if err := os.MkdirAll(blobDir, 0o755); err != nil {
 				return nil, err
-			}
-			data, err := fetchBlob(src)
-			if err != nil {
-				warns = append(warns, fmt.Sprintf("blob %s: %v (skipped bundling)", b.File, err))
-				continue
 			}
 			if err := os.WriteFile(filepath.Join(blobDir, b.File), data, 0o644); err != nil {
 				return nil, err
@@ -84,6 +93,23 @@ func EmitStrategies(sc StrategyConfig, dir string) ([]string, error) {
 		return nil, err
 	}
 	return warns, os.WriteFile(filepath.Join(dir, candidatesFile), append(out, '\n'), 0o644)
+}
+
+// localBlob reads an in-repo blob from dir when dir is set and the file exists
+// there. Returns (nil, nil) when there is no local copy, so the caller falls
+// back to a remote source.
+func localBlob(dir, file string) ([]byte, error) {
+	if dir == "" {
+		return nil, nil
+	}
+	data, err := os.ReadFile(filepath.Join(dir, filepath.Base(file)))
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // blobSource resolves a blob's fetch URL: explicit url, else blobs_base+file.

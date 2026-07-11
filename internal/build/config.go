@@ -21,15 +21,19 @@ type Config struct {
 // StrategyConfig declares the zapret2 strategy candidates published as
 // zapret_candidates.json (+ any non-standard decoy blobs bundled under blobs/).
 type StrategyConfig struct {
+	BlobsDir   string     `yaml:"blobs_dir"`  // in-repo dir holding .bin files; a local hit wins over BlobsBase/url
 	BlobsBase  string     `yaml:"blobs_base"` // default source URL prefix for blob files
 	Candidates []Strategy `yaml:"candidates"`
 }
 
 // Strategy is one zapret_candidates.json entry — mirrors purewrt's
-// config.ZapretCandidate (json tags must match).
+// config.ZapretCandidate exactly (field names + json tags must match, so the
+// router unmarshals every field). Candidates are grouped on two orthogonal
+// axes: ISP (network — "common" is the cross-ISP default) and Service (what the
+// user is unblocking — youtube/discord/games; "" or "generic" is a wildcard).
 type Strategy struct {
 	Name      string   `yaml:"name" json:"name"`
-	Group     string   `yaml:"group" json:"group"`
+	ISP       string   `yaml:"isp" json:"isp"`                   // "common" (cross-ISP default) | ISP label, e.g. "Rostelecom (RU)"
 	Service   string   `yaml:"service" json:"service,omitempty"` // "" | "generic" | "youtube" | "discord" | "games"
 	Protocols []string `yaml:"protocols" json:"protocols"`
 	TCPPorts  string   `yaml:"tcp_ports" json:"tcp_ports"`
