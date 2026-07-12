@@ -45,6 +45,11 @@ categories:
       - https://github.com/1andrevich/Re-filter-lists/releases/latest/download/ipsum.lst
       - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/community_ips.lst
       - https://raw.githubusercontent.com/1andrevich/Re-filter-lists/main/discord_ips.lst
+      - https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/cloudflare.lst
+      - https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/cloudfront.lst
+      - https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/digitalocean.lst
+      - https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/ovh.lst
+      - https://raw.githubusercontent.com/itdoginfo/allow-domains/refs/heads/main/Subnets/IPv4/hetzner.lst
 
 # zapret2 strategy candidates published as zapret_candidates.json (the purewrt
 # Zapret tester + preset dropdown fetch this). Blobs with a `url` (or resolved
